@@ -36,7 +36,7 @@ private[circe] inline def summonEncoders[T <: Tuple](using Configuration): List[
 private[circe] inline def summonEncoder[A](using Configuration): Encoder[A] =
   summonFrom {
     case encodeA: Encoder[A] => encodeA
-    case _: Mirror.Of[A]     => ConfiguredEncoder.derived[A]
+    case _: Mirror.Of[A]     => ConfiguredEncoder.derive[A]
   }
 
 private[circe] inline def summonDecoders[T <: Tuple](using Configuration): List[Decoder[_]] =

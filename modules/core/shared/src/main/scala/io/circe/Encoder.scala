@@ -138,7 +138,8 @@ object Encoder
     with ProductTypedEncoders
     with LiteralEncoders
     with EnumerationEncoders
-    with MidPriorityEncoders {
+    with MidPriorityEncoders
+    with EncoderDerivation {
 
   /**
    * Return an instance for a given type `A`.
@@ -935,7 +936,7 @@ object Encoder
    *
    * @author Travis Brown
    */
-  object AsObject extends LowPriorityAsObjectEncoders with EncoderDerivation {
+  object AsObject extends LowPriorityAsObjectEncoders {
 
     /**
      * Return an instance for a given type.

@@ -21,7 +21,7 @@ import io.circe.{ Codec, Decoder, Encoder, HCursor, Json }
 import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 
-case class Foo(s: String, d: Double, i: Int, l: Long, bs: List[Boolean]) derives Codec.AsObject
+case class Foo(s: String, d: Double, i: Int, l: Long, bs: List[Boolean]) derives Codec
 
 object Foo {
   implicit val eqFoo: Eq[Foo] = Eq.fromUniversalEquals[Foo]

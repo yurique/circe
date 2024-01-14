@@ -28,7 +28,7 @@ object DerivesSuite {
   case class Box[A](a: A)
 
   object Box {
-    given codec[A: Encoder: Decoder]: Codec[Box[A]] = Codec.AsObject.derived
+    given codec[A: Encoder: Decoder]: Codec[Box[A]] = Codec.derived
     given eqBox[A: Eq]: Eq[Box[A]] = Eq.by(_.a)
     given arbitraryBox[A](using A: Arbitrary[A]): Arbitrary[Box[A]] = Arbitrary(A.arbitrary.map(Box(_)))
   }
@@ -36,7 +36,7 @@ object DerivesSuite {
   case class InnerBox[A](inner: A)
 
   object InnerBox {
-    given codec[A: Encoder: Decoder]: Codec[InnerBox[A]] = Codec.AsObject.derived
+    given codec[A: Encoder: Decoder]: Codec[InnerBox[A]] = Codec.derived
     given eqInnerBox[A: Eq]: Eq[InnerBox[A]] = Eq.by(_.inner)
     given arbitraryInnerBox[A](using A: Arbitrary[A]): Arbitrary[InnerBox[A]] = Arbitrary(
       A.arbitrary.map(InnerBox(_))
@@ -52,7 +52,7 @@ object DerivesSuite {
     f: Nullable[List[String]],
     g: Option[Box[String]]
   ) derives Decoder,
-        Encoder.AsObject
+        Encoder
 
   object WithNullables {
     implicit def eqNullable[A]: Eq[Nullable[A]] = Eq.fromUniversalEquals
@@ -89,7 +89,7 @@ object DerivesSuite {
   case class Qux[A](i: Int, a: A, j: Int)
 
   object Qux {
-    given codec[A: Encoder: Decoder]: Codec[Qux[A]] = Codec.AsObject.derived
+    given codec[A: Encoder: Decoder]: Codec[Qux[A]] = Codec.derived
     given eqQux[A: Eq]: Eq[Qux[A]] = Eq.by(q => (q.i, q.a, q.j))
 
     given arbitraryQux[A](using A: Arbitrary[A]): Arbitrary[Qux[A]] =
@@ -102,17 +102,17 @@ object DerivesSuite {
       )
   }
 
-  case class Wub(x: Long) derives Codec.AsObject
+  case class Wub(x: Long) derives Codec
 
   object Wub {
     given Eq[Wub] = Eq.by(_.x)
     given Arbitrary[Wub] = Arbitrary(Arbitrary.arbitrary[Long].map(Wub(_)))
   }
 
-  sealed trait Foo derives Codec.AsObject
+  sealed trait Foo derives Codec
   case class Bar(i: Int, s: String) extends Foo
   case class Baz(xs: List[String]) extends Foo
-  case class Bam(w: Wub, d: Double) extends Foo derives Codec.AsObject
+  case class Bam(w: Wub, d: Double) extends Foo derives Codec
 
   object Bar {
     given Eq[Bar] = Eq.fromUniversalEquals
@@ -163,9 +163,9 @@ object DerivesSuite {
     )
   }
 
-  sealed trait RecursiveAdtExample derives Codec.AsObject
-  case class BaseAdtExample(a: String) extends RecursiveAdtExample derives Codec.AsObject
-  case class NestedAdtExample(r: RecursiveAdtExample) extends RecursiveAdtExample derives Codec.AsObject
+  sealed trait RecursiveAdtExample derives Codec
+  case class BaseAdtExample(a: String) extends RecursiveAdtExample derives Codec
+  case class NestedAdtExample(r: RecursiveAdtExample) extends RecursiveAdtExample derives Codec
 
   object RecursiveAdtExample {
     given Eq[RecursiveAdtExample] = Eq.fromUniversalEquals
@@ -181,7 +181,7 @@ object DerivesSuite {
       Arbitrary(atDepth(0))
   }
 
-  case class RecursiveWithOptionExample(o: Option[RecursiveWithOptionExample]) derives Codec.AsObject
+  case class RecursiveWithOptionExample(o: Option[RecursiveWithOptionExample]) derives Codec
 
   object RecursiveWithOptionExample {
     given Eq[RecursiveWithOptionExample] =
@@ -198,7 +198,7 @@ object DerivesSuite {
       Arbitrary(atDepth(0))
   }
 
-  enum Vegetable derives Codec.AsObject:
+  enum Vegetable derives Codec:
     case Potato(species: String)
     case Carrot(length: Double)
     case Onion(layers: Int)
@@ -224,7 +224,7 @@ object DerivesSuite {
       )
     )
 
-  enum RecursiveEnumAdt derives Codec.AsObject:
+  enum RecursiveEnumAdt derives Codec:
     case BaseAdtExample(a: String)
     case NestedAdtExample(r: RecursiveEnumAdt)
   object RecursiveEnumAdt:
@@ -239,7 +239,7 @@ object DerivesSuite {
 
     given Arbitrary[RecursiveEnumAdt] = Arbitrary(atDepth(0))
 
-  sealed trait ADTWithSubTraitExample derives Codec.AsObject
+  sealed trait ADTWithSubTraitExample derives Codec
   sealed trait SubTrait extends ADTWithSubTraitExample
   case class TheClass(a: Int) extends SubTrait
 
@@ -247,7 +247,7 @@ object DerivesSuite {
     given Arbitrary[ADTWithSubTraitExample] = Arbitrary(Arbitrary.arbitrary[Int].map(TheClass.apply))
     given Eq[ADTWithSubTraitExample] = Eq.fromUniversalEquals
 
-  case class ProductWithTaggedMember(x: ProductWithTaggedMember.TaggedString) derives Codec.AsObject
+  case class ProductWithTaggedMember(x: ProductWithTaggedMember.TaggedString) derives Codec
 
   object ProductWithTaggedMember:
     sealed trait Tag

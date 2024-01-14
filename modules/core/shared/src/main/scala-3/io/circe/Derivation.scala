@@ -133,13 +133,17 @@ private[circe] trait DerivedDecoder[A] extends DerivedInstance[A] with Decoder[A
 }
 
 private[circe] trait EncoderDerivation:
-  inline final def derived[A](using inline A: Mirror.Of[A]): Encoder.AsObject[A] =
-    ConfiguredEncoder.derived[A](using Configuration.default)
+  inline final def derived[A](using
+    inline A: Mirror.Of[A],
+    inline configuration: Configuration = Configuration.default
+  ): Encoder[A] =
+    ConfiguredEncoder.derive[A]
+
   inline final def derivedConfigured[A](using
     inline A: Mirror.Of[A],
     inline configuration: Configuration
-  ): Encoder.AsObject[A] =
-    ConfiguredEncoder.derived[A]
+  ): Encoder[A] =
+    ConfiguredEncoder.derive[A]
 
 private[circe] trait DecoderDerivation:
   inline final def derived[A](using inline A: Mirror.Of[A]): Decoder[A] =
@@ -148,10 +152,13 @@ private[circe] trait DecoderDerivation:
     ConfiguredDecoder.derived[A]
 
 private[circe] trait CodecDerivation:
-  inline final def derived[A](using inline A: Mirror.Of[A]): Codec.AsObject[A] =
-    ConfiguredCodec.derived[A](using Configuration.default)
+  inline final def derived[A](using
+    inline A: Mirror.Of[A],
+    inline configuration: Configuration = Configuration.default
+  ): Codec[A] =
+    ConfiguredCodec.derive[A](using Configuration.default)
   inline final def derivedConfigured[A](using
     inline A: Mirror.Of[A],
     inline configuration: Configuration
-  ): Codec.AsObject[A] =
-    ConfiguredCodec.derived[A]
+  ): Codec[A] =
+    ConfiguredCodec.derive[A]

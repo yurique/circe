@@ -31,7 +31,7 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalacheck.Prop.forAll
 
 object ConfiguredDerivesSuite:
-  // "derives ConfiguredCodec" is not here so we can change the configuration for the derivation in each test
+  // "derives Codec" is not here so we can change the configuration for the derivation in each test
   case class ConfigExampleWithOptions(
     thisIsAField: String,
     thisIsAnOptionalField: Option[String]
@@ -69,14 +69,14 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
   {
     given Configuration = Configuration.default
-    given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleBase] = Codec.derived
     checkAll("Codec[ConfigExampleBase] (default configuration)", CodecTests[ConfigExampleBase].codec)
   }
 
   test("Fail when the json to be decoded is not a Json object") {
     given Configuration = Configuration.default
-    given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
-    given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleBase] = Codec.derived
+    given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.derived
 
     val json = Json.fromString("a string")
     def failure(name: String) = DecodingFailure(WrongTypeExpectation("object", json), List())
@@ -88,7 +88,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
   test("Fail to decode if case name does not exist") {
     given Configuration = Configuration.default
-    given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleBase] = Codec.derived
 
     val json = Json.obj(
       "invalid-name" -> Json.obj(
@@ -107,7 +107,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
   test("Fail to decode if case name does not exist when constructor names are being transformed") {
     given Configuration = Configuration.default.withSnakeCaseConstructorNames
-    given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleBase] = Codec.derived
 
     val json = Json.obj(
       "ConfigExampleFoo" -> Json.obj(
@@ -128,7 +128,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#transformMemberNames should support member name transformation using snake_case") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withSnakeCaseMemberNames
-      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.derived
 
       val json = Json.obj(
         "this_is_a_field" -> foo.thisIsAField.asJson,
@@ -143,7 +143,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#transformMemberNames should support member name transformation using SCREAMING_SNAKE_CASE") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withScreamingSnakeCaseMemberNames
-      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.derived
 
       val json = Json.obj(
         "THIS_IS_A_FIELD" -> foo.thisIsAField.asJson,
@@ -158,7 +158,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#transformMemberNames should support member name transformation using kebab-case") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withKebabCaseMemberNames
-      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.derived
       val json = Json.obj(
         "this-is-a-field" -> foo.thisIsAField.asJson,
         "a" -> foo.a.asJson,
@@ -172,7 +172,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#transformMemberNames should support member name transformation using PascalCase") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withPascalCaseMemberNames
-      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.derived
       val json = Json.obj(
         "ThisIsAField" -> foo.thisIsAField.asJson,
         "A" -> foo.a.asJson,
@@ -186,7 +186,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#withDefaults should support using default values during decoding") {
     forAll { (f: String, b: Double) =>
       given Configuration = Configuration.default.withDefaults
-      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase.ConfigExampleFoo] = Codec.derived
 
       val foo: ConfigExampleBase.ConfigExampleFoo = ConfigExampleBase.ConfigExampleFoo(f, 0, b)
       val json = Json.obj(
@@ -206,11 +206,11 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   {
     given Configuration = Configuration.default.withDefaults
 
-    case class FooWithDefault(a: Option[Int] = Some(0), b: String = "b") derives ConfiguredCodec
+    case class FooWithDefault(a: Option[Int] = Some(0), b: String = "b") derives Codec
     object FooWithDefault:
       given Eq[FooWithDefault] = Eq.fromUniversalEquals
 
-    case class FooNoDefault(a: Option[Int], b: String = "b") derives ConfiguredCodec
+    case class FooNoDefault(a: Option[Int], b: String = "b") derives Codec
     object FooNoDefault:
       given Eq[FooNoDefault] = Eq.fromUniversalEquals
 
@@ -264,7 +264,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
     case class GenericFoo[T](a: List[T] = List.empty, b: String = "b")
     object GenericFoo:
-      given [T: Encoder: Decoder]: Codec.AsObject[GenericFoo[T]] = ConfiguredCodec.derived
+      given [T: Encoder: Decoder]: Codec[GenericFoo[T]] = Codec.derived
       given [T: Eq]: Eq[GenericFoo[T]] = Eq.fromUniversalEquals
 
     test("Configuration#withDefaults should support generic classes") {
@@ -277,7 +277,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
     "Decoding when Configuration#discriminator is set should fail if the discriminator field does not exist or its null"
   ) {
     given Configuration = Configuration.default.withDiscriminator("type")
-    given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleBase] = Codec.derived
 
     val failure = DecodingFailure(
       "ConfigExampleBase: could not find discriminator field 'type' or its null.",
@@ -306,7 +306,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#discriminator should support a field indicating constructor") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withDiscriminator("type")
-      given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase] = Codec.derived
 
       val json = Json.obj(
         "type" -> "ConfigExampleFoo".asJson,
@@ -322,7 +322,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#transformConstructorNames should support constructor name transformation with snake_case") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withDiscriminator("type").withSnakeCaseConstructorNames
-      given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase] = Codec.derived
 
       val json = Json.obj(
         "type" -> "config_example_foo".asJson,
@@ -340,7 +340,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   ) {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withDiscriminator("type").withScreamingSnakeCaseConstructorNames
-      given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase] = Codec.derived
 
       val json = Json.obj(
         "type" -> "CONFIG_EXAMPLE_FOO".asJson,
@@ -356,7 +356,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#transformConstructorNames should support constructor name transformation with kebab-case") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withDiscriminator("type").withKebabCaseConstructorNames
-      given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase] = Codec.derived
 
       val json = Json.obj(
         "type" -> "config-example-foo".asJson,
@@ -372,7 +372,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   property("Configuration#transformConstructorNames should support constructor name transformation with PascalCase") {
     forAll { (foo: ConfigExampleBase.ConfigExampleFoo) =>
       given Configuration = Configuration.default.withDiscriminator("type").withPascalCaseConstructorNames
-      given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase] = Codec.derived
 
       val json = Json.obj(
         "type" -> "ConfigExampleFoo".asJson,
@@ -390,7 +390,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
       given Configuration = Configuration.default.withSnakeCaseMemberNames.withDefaults
         .withDiscriminator("type")
         .withKebabCaseConstructorNames
-      given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+      given Codec[ConfigExampleBase] = Codec.derived
 
       val foo: ConfigExampleBase.ConfigExampleFoo = ConfigExampleBase.ConfigExampleFoo(f, 0, b)
       val json = Json.obj(
@@ -411,7 +411,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
   test("Configuration#strictDecoding should fail for sum types when the json object has more than one field") {
     given Configuration = Configuration.default.withStrictDecoding
-    given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleBase] = Codec.derived
 
     val json = Json.obj(
       "ConfigExampleFoo" -> Json.obj(
@@ -433,7 +433,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
     "Configuration#strictDecoding should fail for product types when the json object has more fields then expected"
   ) {
     given Configuration = Configuration.default.withStrictDecoding
-    given Codec[ConfigExampleBase] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleBase] = Codec.derived
 
     val json = Json.obj(
       "ConfigExampleFoo" -> Json.obj(
@@ -457,7 +457,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
   property("Configuration#dropNoneValues should drop None values from json") {
     given Configuration = Configuration.default.withDropNoneValues
-    given Codec[ConfigExampleWithOptions] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleWithOptions] = Codec.derived
 
     forAll { (foo: ConfigExampleWithOptions) =>
 
@@ -481,7 +481,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
   test("Configuration#dropNoneValues should parse undefined as None") {
     given Configuration = Configuration.default.withDropNoneValues
-    given Codec[ConfigExampleWithOptions] = Codec.AsObject.derivedConfigured
+    given Codec[ConfigExampleWithOptions] = Codec.derived
 
     val value = ConfigExampleWithOptions(
       thisIsAField = "field value",
@@ -500,7 +500,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   {
     given Configuration = Configuration.default.withDiscriminator("type")
 
-    sealed trait GrandParent derives ConfiguredCodec
+    sealed trait GrandParent derives Codec
     object GrandParent:
       given Eq[GrandParent] = Eq.fromUniversalEquals
 
@@ -510,7 +510,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
     test("Codec for hierarchy of more than 1 level with discriminator should encode and decode correctly") {
       val child: GrandParent = Child(1, "a")
-      val json = Encoder.AsObject[GrandParent].apply(child)
+      val json = Encoder[GrandParent].apply(child)
       val result = Decoder[GrandParent].decodeJson(json)
       assert(result === Right(child), result)
     }
@@ -532,10 +532,10 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
       "Codec for hierarchy of more than 2 level with discriminator should encode and decode correctly, even if a parent's sibling has a field with the same name as a Child type"
     ) {
       given Configuration = Configuration.default.withDiscriminator("type")
-      given Codec.AsObject[GreatGrandParent] = ConfiguredCodec.derived[GreatGrandParent]
+      given Codec[GreatGrandParent] = Codec.derived[GreatGrandParent]
 
       val child: GrandParent = Child(1, "a")
-      val json = Encoder.AsObject[GreatGrandParent].apply(child)
+      val json = Encoder[GreatGrandParent].apply(child)
       val result = Decoder[GreatGrandParent].decodeJson(json)
       assert(result === Right(child), result)
     }
@@ -545,7 +545,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
   {
     given Configuration = Configuration.default.withDiscriminator("type")
 
-    sealed trait Tree derives ConfiguredCodec;
+    sealed trait Tree derives Codec;
     case class Branch(l: Tree, r: Tree) extends Tree;
     case object Leaf extends Tree;
     object Tree:
@@ -553,7 +553,7 @@ class ConfiguredDerivesSuite extends CirceMunitSuite:
 
     test("Codec for recursive type should encode and decode correctly") {
       val tree: Tree = Branch(Branch(Leaf, Leaf), Leaf)
-      val json = Encoder.AsObject[Tree].apply(tree)
+      val json = Encoder[Tree].apply(tree)
       val result = Decoder[Tree].decodeJson(json)
       assert(result === Right(tree), result)
     }

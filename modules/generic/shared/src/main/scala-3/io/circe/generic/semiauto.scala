@@ -40,6 +40,6 @@ import scala.deriving.Mirror
  */
 object semiauto {
   inline final def deriveDecoder[A](using inline A: Mirror.Of[A]): Decoder[A] = Decoder.derived[A]
-  inline final def deriveEncoder[A](using inline A: Mirror.Of[A]): Encoder.AsObject[A] = Encoder.AsObject.derived[A]
-  inline final def deriveCodec[A](using inline A: Mirror.Of[A]): Codec.AsObject[A] = Codec.AsObject.derived[A]
+  inline final def deriveEncoder[A](using inline A: Mirror.Of[A]): Encoder.AsObject[A] = Encoder.derived[A]
+  inline final def deriveCodec[A](using inline A: Mirror.Of[A]): Codec.AsObject[A] = Codec.derived[A]
 }
