@@ -52,7 +52,7 @@ The presence of those implicit values and an import from the `circe-testing` mod
 will allow you to create a `CodecTests[Person]`. First, the dependency:
 
 ```scala
-libraryDependencies += "io.circe" %% "circe-testing" % circeVersion
+libraryDependencies += "io.circe" %% "circe-testing" % "@VERSION@"
 ```
 
 Then, the tests:
