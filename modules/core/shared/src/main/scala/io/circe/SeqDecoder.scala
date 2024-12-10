@@ -23,6 +23,7 @@ import io.circe.DecodingFailure.Reason.WrongTypeExpectation
 import scala.collection.mutable.Builder
 import io.circe.CursorOp.MoveRight
 import io.circe.CursorOp.DownArray
+import io.circe.cursor.ArrayCursor
 
 private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends Decoder[C[A]] {
   protected def createBuilder(): Builder[A, C[A]]
@@ -35,14 +36,15 @@ private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends D
       builder.sizeHint(jsonValues.size)
       var failed: DecodingFailure = null
       var index = 0
+      var cursor: ACursor = new ArrayCursor(jsonValues, index, c, false)(c, CursorOp.DownArray)
 
       while (failed.eq(null) && index < jsonValues.size) {
-        jsonValues(index).as(decodeA) match {
+        cursor.as(decodeA) match {
           case Left(e) =>
-            val arrayHistory: List[CursorOp] = List.fill(index)(MoveRight) ++ List(DownArray) ++ c.history
-            failed = e.copy(history = e.history ++ arrayHistory).withReason(e.reason)
+            failed = e.copy(history = e.history).withReason(e.reason)
           case Right(a) =>
             builder += a
+            cursor = cursor.right
         }
         index += 1
       }
