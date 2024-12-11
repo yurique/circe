@@ -67,14 +67,14 @@ private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends D
       var failed = false
       val failures = List.newBuilder[DecodingFailure]
       var index = 0
+      var cursor = c.downArray
 
       while (index < jsonValues.size) {
-        decodeA.decodeAccumulating(jsonValues(index).hcursor) match {
+        decodeA.decodeAccumulating(cursor.asInstanceOf[HCursor]) match {
           case Validated.Invalid(es) =>
             failed = true
-            val arrayHistory: List[CursorOp] = List.fill(index)(MoveRight) ++ List(DownArray) ++ c.history
             val fixedErrors = es.map { e =>
-              e.copy(history = e.history ++ arrayHistory).withReason(e.reason)
+              e.copy(history = e.history).withReason(e.reason)
             }
             failures += fixedErrors.head
             failures ++= fixedErrors.tail
@@ -84,6 +84,7 @@ private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends D
             }
         }
         index += 1
+        cursor = cursor.right
       }
 
       if (!failed) Validated.valid(builder.result())
