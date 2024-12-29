@@ -86,6 +86,21 @@ private[derivation] class ConfigurationNew(
       strictDecoding
     ) {
 
+  override def copy(
+    transformMemberNames: String => String = this.transformMemberNames,
+    transformConstructorNames: String => String = this.transformConstructorNames,
+    useDefaults: Boolean = this.useDefaults,
+    discriminator: Option[String] = this.discriminator,
+    strictDecoding: Boolean = this.strictDecoding
+  ): Configuration = copyNew(
+    transformMemberNames,
+    transformConstructorNames,
+    useDefaults,
+    discriminator,
+    strictDecoding,
+    dropNoneValues
+  )
+
   private def copyNew(
     transformMemberNames: String => String = this.transformMemberNames,
     transformConstructorNames: String => String = this.transformConstructorNames,
