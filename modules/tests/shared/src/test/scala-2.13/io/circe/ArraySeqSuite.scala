@@ -18,8 +18,6 @@ package io.circe
 
 import io.circe.tests.CirceMunitSuite
 import io.circe.syntax.EncoderOps
-import cats.instances.int.catsKernelStdOrderForInt
-import cats.instances.string.catsKernelStdOrderForString
 import io.circe.testing.CodecTests
 import org.scalacheck.Prop._
 import scala.collection.immutable.ArraySeq
@@ -43,7 +41,7 @@ class ArraySeqSuite extends CirceMunitSuite {
 
   property("decoding an arraySeq should specialise the array type where a class tag is available") {
     forAll { intArray: Array[Int] =>
-      val jsonArray = Json.arr(intArray.map(_.asJson): _*)
+      val jsonArray = Json.arr(intArray.map(_.asJson).toIndexedSeq: _*)
 
       jsonArray.as[ArraySeq[Int]].map(_.getClass) ?= Right(classOf[ArraySeq.ofInt])
     }
@@ -51,7 +49,7 @@ class ArraySeqSuite extends CirceMunitSuite {
 
   property("decoding an arraySeq should not specialise the array type where no class tag is available") {
     forAll { intArray: Array[Int] =>
-      val jsonArray = Json.arr(intArray.map(_.asJson): _*)
+      val jsonArray = Json.arr(intArray.map(_.asJson).toIndexedSeq: _*)
 
       decodeArraySeqWithoutClassTag[Int](jsonArray).map(_.getClass) ?= Right(
         classOf[ArraySeq.ofRef[_]].asInstanceOf[Class[_ <: ArraySeq[Int]]]

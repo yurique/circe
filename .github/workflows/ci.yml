@@ -51,6 +51,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:
@@ -123,11 +126,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
-        run: mkdir -p modules/shapes/.js/target modules/literal/.native/target modules/numbers-testing/.jvm/target modules/testing/jvm/target modules/generic/jvm/target modules/shapes/.native/target modules/generic-simple/.jvm/target modules/numbers/native/target modules/literal/.jvm/target modules/parser/jvm/target modules/literal/.js/target modules/parser/js/target modules/scalajs/target modules/core/native/target modules/shapes/.jvm/target modules/testing/native/target modules/generic-simple/.native/target modules/jawn/jvm/target modules/parser/native/target modules/core/js/target modules/testing/js/target modules/generic/js/target modules/jawn/js/target modules/numbers-testing/.native/target modules/core/jvm/target modules/pointer-literal/.js/target modules/refined/native/target modules/numbers-testing/.js/target modules/pointer/.js/target modules/refined/js/target modules/pointer/.jvm/target modules/pointer-literal/.jvm/target modules/pointer-literal/.native/target modules/scodec/jvm/target modules/scodec/js/target modules/refined/jvm/target modules/jawn/native/target modules/numbers/js/target modules/pointer/.native/target modules/generic/native/target modules/generic-simple/.js/target modules/scodec/native/target modules/numbers/jvm/target project/target
+        run: mkdir -p modules/shapes/.js/target modules/literal/.native/target modules/numbers-testing/.jvm/target modules/testing/jvm/target modules/generic/jvm/target modules/shapes/.native/target modules/generic-simple/.jvm/target modules/numbers/native/target modules/literal/.jvm/target modules/parser/jvm/target modules/literal/.js/target modules/parser/js/target modules/scalajs/target modules/core/native/target modules/shapes/.jvm/target modules/testing/native/target modules/generic-simple/.native/target modules/jawn/jvm/target modules/parser/native/target modules/core/js/target modules/testing/js/target modules/generic/js/target modules/jawn/js/target modules/numbers-testing/.native/target modules/core/jvm/target modules/pointer-literal/.js/target modules/numbers-testing/.js/target modules/pointer/.js/target modules/pointer/.jvm/target modules/pointer-literal/.jvm/target modules/pointer-literal/.native/target modules/scodec/jvm/target modules/scodec/js/target modules/jawn/native/target modules/numbers/js/target modules/pointer/.native/target modules/generic/native/target modules/generic-simple/.js/target modules/scodec/native/target modules/numbers/jvm/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
-        run: tar cf targets.tar modules/shapes/.js/target modules/literal/.native/target modules/numbers-testing/.jvm/target modules/testing/jvm/target modules/generic/jvm/target modules/shapes/.native/target modules/generic-simple/.jvm/target modules/numbers/native/target modules/literal/.jvm/target modules/parser/jvm/target modules/literal/.js/target modules/parser/js/target modules/scalajs/target modules/core/native/target modules/shapes/.jvm/target modules/testing/native/target modules/generic-simple/.native/target modules/jawn/jvm/target modules/parser/native/target modules/core/js/target modules/testing/js/target modules/generic/js/target modules/jawn/js/target modules/numbers-testing/.native/target modules/core/jvm/target modules/pointer-literal/.js/target modules/refined/native/target modules/numbers-testing/.js/target modules/pointer/.js/target modules/refined/js/target modules/pointer/.jvm/target modules/pointer-literal/.jvm/target modules/pointer-literal/.native/target modules/scodec/jvm/target modules/scodec/js/target modules/refined/jvm/target modules/jawn/native/target modules/numbers/js/target modules/pointer/.native/target modules/generic/native/target modules/generic-simple/.js/target modules/scodec/native/target modules/numbers/jvm/target project/target
+        run: tar cf targets.tar modules/shapes/.js/target modules/literal/.native/target modules/numbers-testing/.jvm/target modules/testing/jvm/target modules/generic/jvm/target modules/shapes/.native/target modules/generic-simple/.jvm/target modules/numbers/native/target modules/literal/.jvm/target modules/parser/jvm/target modules/literal/.js/target modules/parser/js/target modules/scalajs/target modules/core/native/target modules/shapes/.jvm/target modules/testing/native/target modules/generic-simple/.native/target modules/jawn/jvm/target modules/parser/native/target modules/core/js/target modules/testing/js/target modules/generic/js/target modules/jawn/js/target modules/numbers-testing/.native/target modules/core/jvm/target modules/pointer-literal/.js/target modules/numbers-testing/.js/target modules/pointer/.js/target modules/pointer/.jvm/target modules/pointer-literal/.jvm/target modules/pointer-literal/.native/target modules/scodec/jvm/target modules/scodec/js/target modules/jawn/native/target modules/numbers/js/target modules/pointer/.native/target modules/generic/native/target modules/generic-simple/.js/target modules/scodec/native/target modules/numbers/jvm/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v'))
@@ -146,6 +149,9 @@ jobs:
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:
@@ -306,13 +312,16 @@ jobs:
 
   dependency-submission:
     name: Submit Dependencies
-    if: github.event_name != 'pull_request'
+    if: github.event.repository.fork == false && github.event_name != 'pull_request'
     strategy:
       matrix:
         os: [ubuntu-latest]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:
@@ -360,7 +369,7 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: circe-extras_sjs1_3 circe-extras_sjs1_2.12 circe-extras_sjs1_2.13 circe-scalafix-internal-input_3 circe-scalafix-internal-input_2.12 circe-scalafix-internal-input_2.13 circe-extras_native0.4_3 circe-extras_native0.4_2.12 circe-extras_native0.4_2.13 circe-scalafix-internal-tests_3 circe-scalafix-internal-tests_2.12 circe-scalafix-internal-tests_2.13 circe-hygiene_native0.4_3 circe-hygiene_native0.4_2.12 circe-hygiene_native0.4_2.13 rootjs_3 rootjs_2.12 rootjs_2.13 circe-docs_3 circe-docs_2.12 circe-docs_2.13 circe-scalafix-internal-output_3 circe-scalafix-internal-output_2.12 circe-scalafix-internal-output_2.13 circe-hygiene_3 circe-hygiene_2.12 circe-hygiene_2.13 circe-hygiene_sjs1_3 circe-hygiene_sjs1_2.12 circe-hygiene_sjs1_2.13 circe-tests_sjs1_3 circe-tests_sjs1_2.12 circe-tests_sjs1_2.13 rootjvm_3 rootjvm_2.12 rootjvm_2.13 circe-scalafix-internal-rules_3 circe-scalafix-internal-rules_2.12 circe-scalafix-internal-rules_2.13 rootnative_3 rootnative_2.12 rootnative_2.13 circe-scalajs-java-time-test_sjs1_3 circe-scalajs-java-time-test_sjs1_2.12 circe-scalajs-java-time-test_sjs1_2.13 circe-tests_3 circe-tests_2.12 circe-tests_2.13 circe-extras_3 circe-extras_2.12 circe-extras_2.13 circe-benchmark_3 circe-benchmark_2.12 circe-benchmark_2.13 circe-tests_native0.4_3 circe-tests_native0.4_2.12 circe-tests_native0.4_2.13
+          modules-ignore: circe-extras_sjs1_3 circe-extras_sjs1_2.12 circe-extras_sjs1_2.13 circe-scalafix-internal-input_3 circe-scalafix-internal-input_2.12 circe-scalafix-internal-input_2.13 circe-extras_native0.5_3 circe-extras_native0.5_2.12 circe-extras_native0.5_2.13 circe-scalafix-internal-tests_3 circe-scalafix-internal-tests_2.12 circe-scalafix-internal-tests_2.13 circe-hygiene_native0.5_3 circe-hygiene_native0.5_2.12 circe-hygiene_native0.5_2.13 rootjs_3 rootjs_2.12 rootjs_2.13 circe-docs_3 circe-docs_2.12 circe-docs_2.13 circe-scalafix-internal-output_3 circe-scalafix-internal-output_2.12 circe-scalafix-internal-output_2.13 circe-hygiene_3 circe-hygiene_2.12 circe-hygiene_2.13 circe-hygiene_sjs1_3 circe-hygiene_sjs1_2.12 circe-hygiene_sjs1_2.13 circe-tests_sjs1_3 circe-tests_sjs1_2.12 circe-tests_sjs1_2.13 rootjvm_3 rootjvm_2.12 rootjvm_2.13 circe-scalafix-internal-rules_3 circe-scalafix-internal-rules_2.12 circe-scalafix-internal-rules_2.13 rootnative_3 rootnative_2.12 rootnative_2.13 circe-scalajs-java-time-test_sjs1_3 circe-scalajs-java-time-test_sjs1_2.12 circe-scalajs-java-time-test_sjs1_2.13 circe-tests_3 circe-tests_2.12 circe-tests_2.13 circe-extras_3 circe-extras_2.12 circe-extras_2.13 circe-benchmark_3 circe-benchmark_2.12 circe-benchmark_2.13 circe-tests_native0.5_3 circe-tests_native0.5_2.12 circe-tests_native0.5_2.13
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
   validate-steward:
@@ -397,6 +406,9 @@ jobs:
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Checkout current branch (fast)
         uses: actions/checkout@v4
 
@@ -427,6 +439,9 @@ jobs:
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
         with:

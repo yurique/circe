@@ -21,6 +21,9 @@ import cats.data.Validated
 import io.circe.DecodingFailure.Reason.WrongTypeExpectation
 
 import scala.collection.mutable.Builder
+import io.circe.CursorOp.MoveRight
+import io.circe.CursorOp.DownArray
+import io.circe.cursor.ArrayCursor
 
 private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends Decoder[C[A]] {
   protected def createBuilder(): Builder[A, C[A]]
@@ -31,26 +34,17 @@ private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends D
       val jsonValues = values.get
       val builder = createBuilder()
       builder.sizeHint(jsonValues.size)
-      var index = 0
-
       var failed: DecodingFailure = null
-      jsonValues.foreach { value =>
-        if (failed.eq(null)) {
-          value.as(decodeA) match {
-            case Left(e) =>
-              // We expect a cursor that shifts N times to the right in an array in the tests,
-              // so we must fix the current error
-              var cursor = c.downArray
-              var i = 0
-              while (i < index) {
-                cursor = cursor.right
-                i += 1
-              }
-              val cursorHistory = cursor.history
-              failed = e.copy(history = cursorHistory ++ e.history.drop(cursorHistory.size))
-            case Right(a) =>
-              builder += a
-          }
+      var index = 0
+      var cursor: ACursor = new ArrayCursor(jsonValues, index, c, false)(c, CursorOp.DownArray)
+
+      while (failed.eq(null) && index < jsonValues.size) {
+        cursor.as(decodeA) match {
+          case Left(e) =>
+            failed = e.copy(history = e.history).withReason(e.reason)
+          case Right(a) =>
+            builder += a
+            cursor = cursor.right
         }
         index += 1
       }
@@ -73,22 +67,14 @@ private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends D
       var failed = false
       val failures = List.newBuilder[DecodingFailure]
       var index = 0
+      var cursor = c.downArray
 
-      jsonValues.foreach { value =>
-        decodeA.decodeAccumulating(value.hcursor) match {
+      while (index < jsonValues.size) {
+        decodeA.decodeAccumulating(cursor.asInstanceOf[HCursor]) match {
           case Validated.Invalid(es) =>
             failed = true
-            // We expect a cursor that shifts N times to the right in an array in the tests,
-            // so we must fix the current errors
             val fixedErrors = es.map { e =>
-              var cursor = c.downArray
-              var i = 0
-              while (i < index) {
-                cursor = cursor.right
-                i += 1
-              }
-              val cursorHistory = cursor.history
-              e.copy(history = cursorHistory ++ e.history.drop(cursorHistory.size))
+              e.copy(history = e.history).withReason(e.reason)
             }
             failures += fixedErrors.head
             failures ++= fixedErrors.tail
@@ -98,6 +84,7 @@ private[circe] abstract class SeqDecoder[A, C[_]](decodeA: Decoder[A]) extends D
             }
         }
         index += 1
+        cursor = cursor.right
       }
 
       if (!failed) Validated.valid(builder.result())
