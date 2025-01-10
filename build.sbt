@@ -27,6 +27,8 @@ ThisBuild / circeRootOfCodeCoverage := Some("rootJVM")
 ThisBuild / libraryDependencySchemes +=
   "org.scala-native" %% "test-interface_native0.5" % VersionScheme.Always
 
+val opticsVersion = "0.15.0"
+
 val catsVersion = "2.12.0"
 val jawnVersion = "1.6.0"
 val shapelessVersion = "2.3.12"
@@ -34,7 +36,7 @@ val shapelessVersion = "2.3.12"
 val paradiseVersion = "2.1.1"
 
 val scalaCheckVersion = "1.18.1"
-val munitVersion = "1.0.2"
+val munitVersion = "1.0.3"
 val munitScalaCheckVersion = "1.0.0"
 val disciplineVersion = "1.7.0"
 val disciplineScalaTestVersion = "2.3.0"
@@ -114,9 +116,12 @@ lazy val docs = project
     name := "Circe docs",
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-generic-extras" % "0.14.3",
-      "io.circe" %% "circe-optics" % "0.15.0"
+      "io.circe" %% "circe-optics" % opticsVersion
     ),
-    tlSitePublishBranch := Some("series/0.14.x")
+    tlSitePublishBranch := Some("series/0.14.x"),
+    mdocVariables ++= Map(
+      "CIRCE_OPTICS_VERSION" -> opticsVersion
+    )
   )
   .enablePlugins(CirceOrgSitePlugin)
   .settings(macroSettings)
