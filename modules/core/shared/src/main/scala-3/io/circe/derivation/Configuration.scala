@@ -62,13 +62,13 @@ case class Configuration(
 
   val dropNoneValues: Boolean = false
 
-  def withKeepNoneValues: Configuration = new ConfigurationNew(
+  def withDropNoneValues(dropNoneValues: Boolean): Configuration = new ConfigurationNew(
     transformMemberNames = transformMemberNames,
     transformConstructorNames = transformConstructorNames,
     useDefaults = useDefaults,
     discriminator = discriminator,
     strictDecoding = strictDecoding,
-    dropNoneValues = false
+    dropNoneValues = dropNoneValues
   )
 
 private[derivation] class ConfigurationNew(
@@ -151,5 +151,14 @@ private[derivation] class ConfigurationNew(
   override def withStrictDecoding: Configuration = copyNew(strictDecoding = true)
 
   override def withoutStrictDecoding: Configuration = copyNew(strictDecoding = false)
+
+  override def withDropNoneValues(dropNoneValues: Boolean): Configuration = new ConfigurationNew(
+    transformMemberNames = transformMemberNames,
+    transformConstructorNames = transformConstructorNames,
+    useDefaults = useDefaults,
+    discriminator = discriminator,
+    strictDecoding = strictDecoding,
+    dropNoneValues = dropNoneValues
+  )
 
 }

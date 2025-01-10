@@ -40,46 +40,6 @@ object DerivesSuite {
     )
   }
 
-  case class WithNullables(
-    a: String,
-    b: NullOr[String],
-    c: Option[NullOr[Int]],
-    d: NullOr[Boolean],
-    e: NullOr[Box[String]],
-    f: NullOr[List[String]],
-    g: Option[Box[String]]
-  ) derives Decoder,
-        Encoder.AsObject
-
-  object WithNullables {
-    given Eq[WithNullables] = Eq.fromUniversalEquals
-    given Arbitrary[WithNullables] = {
-      given aNullable[A](using A: Arbitrary[A]): Arbitrary[NullOr[A]] =
-        Arbitrary[NullOr[A]](
-          A.arbitrary.flatMap { a =>
-            summon[Arbitrary[Int]].arbitrary.map {
-              case byte if byte % 3 == 0 =>
-                NullOr.Null: NullOr[A]
-              case _ =>
-                NullOr.Value(a): NullOr[A]
-            }
-          }
-        )
-
-      val gen = for {
-        a <- summon[Arbitrary[String]].arbitrary
-        b <- summon[Arbitrary[NullOr[String]]].arbitrary
-        c <- summon[Arbitrary[Option[NullOr[Int]]]].arbitrary
-        d <- summon[Arbitrary[NullOr[Boolean]]].arbitrary
-        e <- summon[Arbitrary[NullOr[Box[String]]]].arbitrary
-        f <- summon[Arbitrary[NullOr[List[String]]]].arbitrary
-        g <- summon[Arbitrary[Option[Box[String]]]].arbitrary
-      } yield WithNullables(a, b, c, d, e, f, g)
-      Arbitrary(gen)
-    }
-
-  }
-
   case class Qux[A](i: Int, a: A, j: Int) derives Codec
 
   object Qux {
@@ -277,6 +237,7 @@ object DerivesSuite {
 class DerivesSuite extends CirceMunitSuite {
   import DerivesSuite._
   import io.circe.syntax._
+  import data.withDropNoneValues.*
 
   checkAll("Codec[Box[Wub]]", CodecTests[Box[Wub]].codec)
   checkAll("Codec[Box[Long]]", CodecTests[Box[Long]].codec)
@@ -303,7 +264,7 @@ class DerivesSuite extends CirceMunitSuite {
     val some = Outer(Some(Inner("c")))
     val none = Outer(None)
     val expectedSome = Json.obj("a" -> Json.obj("field" -> "c".asJson))
-    val expectedNone = Json.obj( /* "a" -> Json.Null */ ) // TODO: revisit after dropNoneValue is made configurable
+    val expectedNone = Json.obj("a" -> Json.Null)
     assertEquals(some.asJson, expectedSome)
     assertEquals(none.asJson, expectedNone)
   }
@@ -342,6 +303,7 @@ class DerivesSuite extends CirceMunitSuite {
 
   test("NullOr codecs work as expected") {
     import io.circe.syntax._
+    import data.withDropNoneValues.*
 
     val foo =
       WithNullables(
@@ -349,9 +311,9 @@ class DerivesSuite extends CirceMunitSuite {
         b = NullOr.Value("b value"),
         c = None,
         d = NullOr.Null,
-        e = NullOr.Value(Box("boxed value")),
+        e = NullOr.Value(AnotherBox("boxed value")),
         f = NullOr.Value(List("a", "b", "c")),
-        g = Some(Box("boxed in option"))
+        g = Some(AnotherBox("boxed in option"))
       )
 
     val expected = Json.obj(
