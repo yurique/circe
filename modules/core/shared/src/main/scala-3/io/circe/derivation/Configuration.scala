@@ -60,7 +60,7 @@ case class Configuration(
   def withStrictDecoding: Configuration = copy(strictDecoding = true)
   def withoutStrictDecoding: Configuration = copy(strictDecoding = false)
 
-  val dropNoneValues: Boolean = true
+  val dropNoneValues: Boolean = false
 
   def withKeepNoneValues: Configuration = new ConfigurationNew(
     transformMemberNames = transformMemberNames,
