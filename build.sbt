@@ -126,7 +126,7 @@ lazy val docs = project
   .enablePlugins(CirceOrgSitePlugin)
   .settings(macroSettings)
 
-lazy val macroSettings: Seq[Setting[_]] = Seq(
+lazy val macroSettings: Seq[Setting[?]] = Seq(
   libraryDependencies ++= (if (tlIsScala3.value) Nil
                            else
                              Seq(

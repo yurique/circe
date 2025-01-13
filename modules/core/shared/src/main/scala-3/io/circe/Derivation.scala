@@ -20,7 +20,7 @@ import scala.compiletime.constValue
 import scala.deriving.Mirror
 import Predef.genericArrayOps
 import cats.data.{ NonEmptyList, Validated }
-import io.circe.derivation._
+import io.circe.derivation.*
 
 @deprecated(since = "0.14.4")
 object Derivation {
