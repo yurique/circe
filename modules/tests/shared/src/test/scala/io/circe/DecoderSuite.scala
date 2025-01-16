@@ -47,7 +47,7 @@ class DecoderSuite extends CirceMunitSuite with LargeNumberDecoderTestsMunit {
     _.emapTry(Success(_))
   )
 
-  private[this] def containerDecoders[T: Decoder]: List[Decoder[_]] = List(
+  private[this] def containerDecoders[T: Decoder]: List[Decoder[?]] = List(
     Decoder[Set[T]],
     Decoder[List[T]],
     Decoder[Vector[T]],
