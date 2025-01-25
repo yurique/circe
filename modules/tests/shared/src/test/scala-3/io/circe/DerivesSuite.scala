@@ -271,7 +271,7 @@ class DerivesSuite extends CirceMunitSuite {
   }
 
   test("Derivation uses pre-existing given codecs") {
-    import io.circe.syntax._
+    import io.circe.syntax.*
 
     {
       val foo = Box("inner value")
@@ -291,7 +291,7 @@ class DerivesSuite extends CirceMunitSuite {
   }
 
   test("Recursive derivation works inside Option") {
-    import io.circe.syntax._
+    import io.circe.syntax.*
     val foo = Box(Option(InnerBox("inner value")))
     val expected = Json.obj(
       "a" -> Json.obj(
@@ -303,7 +303,7 @@ class DerivesSuite extends CirceMunitSuite {
   }
 
   test("NullOr codecs work as expected") {
-    import io.circe.syntax._
+    import io.circe.syntax.*
     import data.withDropNoneValues.*
 
     val foo =

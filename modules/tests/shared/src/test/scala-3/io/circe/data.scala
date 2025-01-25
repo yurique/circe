@@ -16,10 +16,10 @@
 
 package io.circe
 
-import io.circe.derivation._
+import io.circe.derivation.*
 import cats.kernel.Eq
-import cats.kernel.instances.all._
-import cats.syntax.eq._
+import cats.kernel.instances.all.*
+import cats.syntax.eq.*
 import io.circe.testing.CodecTests
 import io.circe.tests.CirceMunitSuite
 import org.scalacheck.{ Arbitrary, Gen }
