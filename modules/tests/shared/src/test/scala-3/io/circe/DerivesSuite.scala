@@ -17,8 +17,9 @@
 package io.circe
 
 import cats.kernel.Eq
-import cats.kernel.instances.all._
-import cats.syntax.eq._
+import cats.kernel.instances.all.*
+import cats.syntax.eq.*
+import io.circe.{ Codec, Decoder, Encoder, Json }
 import io.circe.testing.CodecTests
 import io.circe.tests.CirceMunitSuite
 import org.scalacheck.{ Arbitrary, Gen }
@@ -59,8 +60,8 @@ object DerivesSuite {
   case class Wub(x: Long) derives Codec.AsObject
 
   object Wub {
-    given Eq[Wub] = Eq.by(_.x)
-    given Arbitrary[Wub] = Arbitrary(Arbitrary.arbitrary[Long].map(Wub(_)))
+    implicit val eqWub: Eq[Wub] = Eq.by(_.x)
+    implicit val arbitraryWub: Arbitrary[Wub] = Arbitrary(Arbitrary.arbitrary[Long].map(Wub(_)))
   }
 
   sealed trait Foo derives Codec.AsObject
@@ -69,35 +70,35 @@ object DerivesSuite {
   case class Bam(w: Wub, d: Double) extends Foo derives Codec.AsObject
 
   object Bar {
-    given Eq[Bar] = Eq.fromUniversalEquals
-    given Arbitrary[Bar] = Arbitrary(
+    implicit val eqBar: Eq[Bar] = Eq.fromUniversalEquals
+    implicit val arbitraryBar: Arbitrary[Bar] = Arbitrary(
       for {
         i <- Arbitrary.arbitrary[Int]
         s <- Arbitrary.arbitrary[String]
       } yield Bar(i, s)
     )
 
-    given Decoder[Bar] = Decoder.forProduct2("i", "s")(Bar.apply)
-    given Encoder[Bar] = Encoder.forProduct2("i", "s") {
+    implicit val decodeBar: Decoder[Bar] = Decoder.forProduct2("i", "s")(Bar.apply)
+    implicit val encodeBar: Encoder[Bar] = Encoder.forProduct2("i", "s") {
       case Bar(i, s) => (i, s)
     }
   }
 
   object Baz {
-    given Eq[Baz] = Eq.fromUniversalEquals
-    given Arbitrary[Baz] = Arbitrary(
+    implicit val eqBaz: Eq[Baz] = Eq.fromUniversalEquals
+    implicit val arbitraryBaz: Arbitrary[Baz] = Arbitrary(
       Arbitrary.arbitrary[List[String]].map(Baz.apply)
     )
 
-    given Decoder[Baz] = Decoder[List[String]].map(Baz(_))
-    given Encoder[Baz] = Encoder.instance {
+    implicit val decodeBaz: Decoder[Baz] = Decoder[List[String]].map(Baz(_))
+    implicit val encodeBaz: Encoder[Baz] = Encoder.instance {
       case Baz(xs) => Json.fromValues(xs.map(Json.fromString))
     }
   }
 
   object Bam {
-    given Eq[Bam] = Eq.fromUniversalEquals
-    given Arbitrary[Bam] = Arbitrary(
+    implicit val eqBam: Eq[Bam] = Eq.fromUniversalEquals
+    implicit val arbitraryBam: Arbitrary[Bam] = Arbitrary(
       for {
         w <- Arbitrary.arbitrary[Wub]
         d <- Arbitrary.arbitrary[Double]
@@ -106,9 +107,9 @@ object DerivesSuite {
   }
 
   object Foo {
-    given Eq[Foo] = Eq.fromUniversalEquals
+    implicit val eqFoo: Eq[Foo] = Eq.fromUniversalEquals
 
-    given Arbitrary[Foo] = Arbitrary(
+    implicit val arbitraryFoo: Arbitrary[Foo] = Arbitrary(
       Gen.oneOf(
         Arbitrary.arbitrary[Bar],
         Arbitrary.arbitrary[Baz],
@@ -122,7 +123,7 @@ object DerivesSuite {
   case class NestedAdtExample(r: RecursiveAdtExample) extends RecursiveAdtExample derives Codec.AsObject
 
   object RecursiveAdtExample {
-    given Eq[RecursiveAdtExample] = Eq.fromUniversalEquals
+    implicit val eqRecursiveAdtExample: Eq[RecursiveAdtExample] = Eq.fromUniversalEquals
 
     private def atDepth(depth: Int): Gen[RecursiveAdtExample] = if (depth < 3)
       Gen.oneOf(
@@ -131,14 +132,14 @@ object DerivesSuite {
       )
     else Arbitrary.arbitrary[String].map(BaseAdtExample(_))
 
-    given Arbitrary[RecursiveAdtExample] =
+    implicit val arbitraryRecursiveAdtExample: Arbitrary[RecursiveAdtExample] =
       Arbitrary(atDepth(0))
   }
 
   case class RecursiveWithOptionExample(o: Option[RecursiveWithOptionExample]) derives Codec.AsObject
 
   object RecursiveWithOptionExample {
-    given Eq[RecursiveWithOptionExample] =
+    implicit val eqRecursiveWithOptionExample: Eq[RecursiveWithOptionExample] =
       Eq.fromUniversalEquals
 
     private def atDepth(depth: Int): Gen[RecursiveWithOptionExample] = if (depth < 3)
@@ -148,7 +149,7 @@ object DerivesSuite {
       )
     else Gen.const(RecursiveWithOptionExample(None))
 
-    given Arbitrary[RecursiveWithOptionExample] =
+    implicit val arbitraryRecursiveWithOptionExample: Arbitrary[RecursiveWithOptionExample] =
       Arbitrary(atDepth(0))
   }
 
@@ -235,8 +236,8 @@ object DerivesSuite {
 }
 
 class DerivesSuite extends CirceMunitSuite {
-  import DerivesSuite._
-  import io.circe.syntax._
+  import DerivesSuite.*
+  import io.circe.syntax.*
   import data.withDropNoneValues.*
 
   checkAll("Codec[Box[Wub]]", CodecTests[Box[Wub]].codec)
